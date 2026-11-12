@@ -29,6 +29,11 @@ export type PracticeConfig = {
   start: number;
   end: number;
 };
+export type LayerId = "melody" | "beat";
+export type LayerVolumes = Record<LayerId, number>;
+export const DEFAULT_LAYER_VOLUMES: LayerVolumes = { melody: 0.45, beat: 0.45 };
+export const clampLayerVolume = (value: number) =>
+  Math.max(0, Math.min(1, Number.isFinite(value) ? value : 0));
 export function makeRun(track: Track, config: PracticeConfig): Run {
   const start = config.enabled ? config.start : 0;
   const end = config.enabled ? config.end : track.beats;

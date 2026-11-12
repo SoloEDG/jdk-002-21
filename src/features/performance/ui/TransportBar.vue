@@ -1,15 +1,21 @@
 <script setup lang="ts">
-import type { Phase } from "../../../shared/session";
-defineProps<{ phase: Phase; time: number; duration: number; volume: number }>();
+import type { Phase, LayerVolumes } from "../../../shared/session";
+defineProps<{
+  phase: Phase;
+  time: number;
+  duration: number;
+  volumes: LayerVolumes;
+}>();
 defineEmits<{
   start: [];
   pause: [];
   resume: [];
   restart: [];
-  volume: [v: number];
+  layerVolume: [layer: "melody" | "beat", v: number];
 }>();
 const fmt = (n: number) =>
   `${Math.floor(n / 60)}:${String(Math.floor(n % 60)).padStart(2, "0")}`;
+const pct = (v: number) => `${Math.round(v * 100)}%`;
 </script>
 <template>
   <div class="transport">
@@ -39,19 +45,42 @@ const fmt = (n: number) =>
         @click="$emit('restart')"
       >
         ↻</button
-      ><label class="volume"
-        >音量
-        <input
-          aria-label="音量"
-          type="range"
-          min="0"
-          max="1"
-          step=".05"
-          :value="volume"
-          @input="
-            $emit('volume', Number(($event.target as HTMLInputElement).value))
-          "
-      /></label>
+      ><div class="volume" role="group" aria-label="分层音量">
+        <label
+          >旋律 <b>{{ pct(volumes.melody) }}</b
+          ><input
+            aria-label="旋律音量"
+            type="range"
+            min="0"
+            max="1"
+            step=".05"
+            :value="volumes.melody"
+            @input="
+              $emit(
+                'layerVolume',
+                'melody',
+                Number(($event.target as HTMLInputElement).value),
+              )
+            "
+        /></label>
+        <label
+          >节拍 <b>{{ pct(volumes.beat) }}</b
+          ><input
+            aria-label="节拍音量"
+            type="range"
+            min="0"
+            max="1"
+            step=".05"
+            :value="volumes.beat"
+            @input="
+              $emit(
+                'layerVolume',
+                'beat',
+                Number(($event.target as HTMLInputElement).value),
+              )
+            "
+        /></label>
+      </div>
     </div>
   </div>
 </template>

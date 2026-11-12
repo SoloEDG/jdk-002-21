@@ -42,7 +42,9 @@ const { library: l, practice: p, judgment: j, records: r, performance: s } = w;
           :track="l.selected.value"
           :config="p.config.value"
           :locked="w.locked.value"
+          :volumes="s.volumes.value"
           @update="w.updatePractice"
+          @layer-volume="s.setLayerVolume"
         />
       </div>
       <section class="performance panel">
@@ -74,12 +76,12 @@ const { library: l, practice: p, judgment: j, records: r, performance: s } = w;
           :phase="s.phase.value"
           :time="s.time.value"
           :duration="secondsAt(l.selected.value.beats, l.selected.value.bpm)"
-          :volume="s.volume.value"
+          :volumes="s.volumes.value"
           @start="w.start"
           @restart="w.start"
           @pause="w.pause"
           @resume="s.resume"
-          @volume="s.setVolume"
+          @layer-volume="s.setLayerVolume"
         />
         <p v-if="w.error.value" role="alert">{{ w.error.value }}</p>
         <div class="stage-help">

@@ -698,6 +698,8 @@ main {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
+  row-gap: 8px;
 }
 .timecode {
   font-size: 11px;
@@ -732,15 +734,54 @@ main {
 }
 .volume {
   display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.volume label,
+.mixer label {
+  display: flex;
   gap: 5px;
   align-items: center;
   font-size: 9px;
   color: #777d89;
+  white-space: nowrap;
 }
-.volume input {
-  width: 48px;
+.volume label b,
+.mixer label b {
+  font-weight: 400;
+  color: #b4b7c0;
+  font-variant-numeric: tabular-nums;
+  min-width: 26px;
+}
+.volume input,
+.mixer input {
+  width: 52px;
   accent-color: #bcf366;
   height: 3px;
+}
+.mixer-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 22px 0 10px;
+  font-size: 11px;
+  color: #a0a3ad;
+}
+.mixer-heading em {
+  font-style: normal;
+  font-size: 9px;
+  color: #5f6571;
+}
+.mixer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.mixer label {
+  justify-content: space-between;
+}
+.mixer input {
+  width: 62%;
 }
 .stage-help {
   display: flex;
@@ -1084,6 +1125,9 @@ footer i {
   }
   .volume input {
     width: 45px;
+  }
+  .mixer input {
+    width: 55%;
   }
   .score-stats {
     max-width: 280px;

@@ -1,4 +1,5 @@
-import type { Run } from "../../../shared/session";
+import type { LayerId, LayerVolumes, Run } from "../../../shared/session";
+import { clampLayerVolume } from "../../../shared/session";
 import { secondsAt } from "../../../shared/chart";
 export class AudioTransport {
   private epoch = 0;
@@ -8,8 +9,11 @@ export class AudioTransport {
   private offset = 0;
   private speed = 1;
   private active = false;
-  private gain: GainNode | null = null;
-  volume = 0.45;
+  private gains: Record<LayerId, GainNode | null> = {
+    melody: null,
+    beat: null,
+  };
+  private volumes: LayerVolumes = { melody: 0.45, beat: 0.45 };
   get time() {
     return (
       this.offset +
@@ -29,15 +33,20 @@ export class AudioTransport {
     this.speed = run.speed;
     this.anchor = ctx.currentTime + 0.04;
     this.active = true;
-    this.gain = ctx.createGain();
-    this.gain.gain.value = this.volume;
-    this.gain.connect(ctx.destination);
+    // 两条独立增益总线：只调增益不重建音源，播放头与判定不受影响
+    (Object.keys(this.gains) as LayerId[]).forEach((layer) => {
+      const gain = ctx.createGain();
+      gain.gain.value = this.volumes[layer];
+      gain.connect(ctx.destination);
+      this.gains[layer] = gain;
+    });
     const end = secondsAt(run.end, run.track.bpm);
     for (let beat = 0; beat < run.end; beat += 0.5) {
       const time = secondsAt(beat, run.track.bpm);
       if (time < at || time >= end) continue;
       const when = this.anchor + (time - at) / this.speed;
       const strong = beat % 1 === 0;
+      const layer: LayerId = strong ? "melody" : "beat";
       const osc = ctx.createOscillator(),
         env = ctx.createGain();
       osc.type = strong ? "triangle" : "sine";
@@ -52,7 +61,7 @@ export class AudioTransport {
         when + (strong ? 0.25 : 0.12) / run.speed,
       );
       osc.connect(env);
-      env.connect(this.gain);
+      env.connect(this.gains[layer]!);
       osc.start(when);
       osc.stop(when + 0.35 / run.speed);
       this.sources.push(osc);
@@ -74,12 +83,19 @@ export class AudioTransport {
       s.disconnect();
     }
     this.sources = [];
-    this.gain?.disconnect();
-    this.gain = null;
+    (Object.keys(this.gains) as LayerId[]).forEach((layer) => {
+      this.gains[layer]?.disconnect();
+      this.gains[layer] = null;
+    });
   }
-  setVolume(value: number) {
-    this.volume = value;
-    if (this.gain)
-      this.gain.gain.setTargetAtTime(value, this.context!.currentTime, 0.03);
+  setLayerVolume(layer: LayerId, value: number) {
+    const clamped = clampLayerVolume(value);
+    this.volumes[layer] = clamped;
+    // 演出中直接平滑作用于当前增益节点，不停止、不重排已调度的声音
+    this.gains[layer]?.gain.setTargetAtTime(
+      clamped,
+      this.context!.currentTime,
+      0.03,
+    );
   }
 }
